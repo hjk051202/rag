@@ -74,7 +74,7 @@ flowchart LR
     R --> B[BM25 关键词召回<br/>jieba 分词]
     V --> F[RRF 融合<br/>k=60]
     B --> F
-    F --> RR[重排<br/>bge-reranker-v2-m3<br/>可选，默认关闭]
+    F --> RR[重排<br/>bge-reranker-v2-m3]
     RR --> T{相关性阈值<br/>0.3}
     T -->|低于阈值| X[拒答：知识库无相关内容]
     T -->|通过| C[上下文组装<br/>编号 + 去重 + 字符预算]
@@ -121,13 +121,14 @@ zhisaotong-rag/
 ├── .env.example
 ├── scripts/
 │   ├── build_index.py          # 建索引
-│   └── compare_retrieval.py    # 纯向量 vs 混合检索 对比
+│   └── compare_retrieval.py    # 三种检索方式对比（纯向量 / 混合 / 混合+重排）
 └── src/zhisaotong_agent/
     ├── app.py                  # Streamlit 界面
     ├── rag/
     │   ├── vector_store.py     # 文档加载、切分、Chroma 建库（沿用上游）
     │   ├── hybrid_retriever.py # 新增：BM25 + RRF 融合
-    │   └── rag_service.py      # 重写：检索 → 组装 → 生成 → 拒答
+    │   ├── reranker.py         # 新增：cross-encoder 重排（API 调用 + 自动降级）
+    │   └── rag_service.py      # 重写：检索 → 重排 → 组装 → 生成 → 拒答
     ├── model/factory.py        # 重写：OpenAI 兼容的模型工厂
     ├── prompts/rag_summarize.txt  # 重写：带引用要求的提示词
     ├── config/                 # 配置（切块参数、top_k、阈值）
@@ -196,7 +197,7 @@ zhisaotong-rag/
 5.  96. 低温环境下机器人无法开机          rerank=0.4939   ← 原来排第 1
 ```
 
-**代价**：多 220ms。**收益**：把最相关的一条从第 5 位拉到第 1 位。是否值得，取决于场景对延迟的容忍度——这也是这个参数默认关闭、只作为可选项的原因。
+**代价**：多 220ms。**收益**：把最相关的一条从第 5 位拉到第 1 位。这条链路值不值得开，取决于场景对延迟的容忍度。
 
 ---
 
