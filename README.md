@@ -59,8 +59,9 @@
 
 ### 其他调整
 
+- 模型层从写死 DashScope 改为 **OpenAI 兼容协议**：换服务商只改 `.env`，不动代码。
 - 去掉 Agent、工具、埋点、用户使用报告（`records.csv`）等与 RAG 无关的模块。
-- 精简依赖：去掉 `langchain`、`langchain-community`、`langchain-ollama`、`dashscope`等不了解的板块
+- 精简依赖：去掉 `langchain`、`langchain-community`、`langchain-ollama`、`dashscope` 四个包，PDF/TXT 读取改为直接调用 `pypdf`。
 
 ---
 
@@ -173,6 +174,7 @@ zhisaotong-rag/
 
 纯向量把「WiFi 断网」排进了前三，而真正写「边刷不旋转」的第 9 条**没进前五**；BM25 靠「边刷」「不转」的精确词匹配把它拉了回来。
 
+> 界面上显示的「RRF 融合分」量级在 0.03 左右，这是 `1/(60+rank)` 的正常取值范围，不是百分比。判断"是否该拒答"用的是另一路向量相关性分数（阈值 0.3）。
 
 ### 重排的效果
 
