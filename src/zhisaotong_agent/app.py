@@ -29,7 +29,7 @@ def render_sources(sources: list[dict]) -> None:
     with st.expander(f"查看引用的 {len(sources)} 条资料"):
         for item in sources:
             st.markdown(
-                f"**[{item['index']}] {item['source']}**  · 相关度 {item['score']}"
+                f"**[{item['index']}] {item['source']}**  · RRF 融合分 {item['score']}"
             )
             st.caption(item["preview"] + "...")
 

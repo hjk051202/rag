@@ -184,6 +184,8 @@ zhisaotong-rag/
 
 > 复现方式：`python scripts/compare_retrieval.py`
 
+> 界面上显示的「RRF 融合分」量级在 0.03 左右，这是 `1/(60+rank)` 的正常取值范围，不是百分比。判断"是否该拒答"用的是另一路向量相关性分数（阈值 0.3）。
+
 ---
 
 ## 九、致谢
