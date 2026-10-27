@@ -17,6 +17,8 @@ from langchain_core.documents import Document
 
 from zhisaotong_agent.model.factory import CHAT_MODEL, get_chat_client
 from zhisaotong_agent.rag.hybrid_retriever import HybridRetriever
+from zhisaotong_agent.rag.reranker import RERANK_CANDIDATES, RerankService
+from zhisaotong_agent.rag.reranker import is_enabled as rerank_enabled
 from zhisaotong_agent.rag.vector_store import VectorStoreService
 from zhisaotong_agent.utils.config_handler import RagConfig, load_rag_config
 from zhisaotong_agent.utils.logger_handler import get_logger
@@ -41,16 +43,24 @@ class RagSummarizeService:
         self._retriever = HybridRetriever(self._vector_service.vector_store)
         self._prompt_template = load_rag_prompts()
         self._client = get_chat_client()
+
+        # 重排：启用时先召回 RERANK_CANDIDATES 个候选，再精排到 top_k 个
+        self._reranker = RerankService() if rerank_enabled() else None
+        self._retrieve_k = RERANK_CANDIDATES if self._reranker else self._conf.retrieval.top_k
+
         logger.info(
-            "RAG 服务就绪：知识库 %d 个分块，对话模型 %s",
+            "RAG 服务就绪：知识库 %d 个分块，对话模型 %s，重排 %s（检索 %d -> 输出 %d）",
             self._retriever.size,
             CHAT_MODEL,
+            "已启用" if self._reranker else "未启用",
+            self._retrieve_k,
+            self._conf.retrieval.top_k,
         )
 
     # === 检索 ===
 
     def retrieve(self, query: str, k: int | None = None) -> Tuple[List[Tuple[Document, float]], float]:
-        top_k = k or self._conf.retrieval.top_k
+        top_k = k or self._retrieve_k
         return self._retriever.search(query, k=top_k)
 
     # === 上下文组装 ===
@@ -99,6 +109,14 @@ class RagSummarizeService:
         except Exception as exc:  # noqa: BLE001
             logger.error("检索失败，query=%s, error=%s", query, exc, exc_info=True)
             return {"answer": "检索服务暂时不可用，请稍后重试。", "sources": [], "abstained": True}
+
+        # 精排：把召回的一批候选交给 cross-encoder 重新打分，只留前 top_k 个
+        if self._reranker is not None and hits:
+            hits = self._reranker.rerank(
+                query,
+                [doc for doc, _ in hits],
+                top_n=self._conf.retrieval.top_k,
+            )
 
         if not hits:
             return {"answer": ABSTAIN_ANSWER, "sources": [], "abstained": True}
