@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Iterable, List
 
 from langchain_chroma import Chroma
@@ -33,11 +34,21 @@ class VectorStoreService:
     """
 
     def __init__(self) -> None:
-        # 初始化向量库
+        # 向量库落盘位置：默认放项目根目录（chroma_db/），不再塞进包目录里。
+        # 若想放到别处，设置环境变量 CHROMA_PERSIST_DIR。
+        persist_dir = os.getenv("CHROMA_PERSIST_DIR", "").strip()
+        if not persist_dir:
+            # 本文件在 src/zhisaotong_agent/rag/ 下，向上三级即项目根目录
+            project_root = Path(__file__).resolve().parents[3]
+            persist_dir = str((project_root / _chroma_conf.client.persist_directory).resolve())
+        # 目录不存在时先建出来：Windows 上 Chroma 有时不会自动创建父目录
+        os.makedirs(persist_dir, exist_ok=True)
+        logger.info("向量库存放目录：%s", persist_dir)
+
         self.vector_store = Chroma(
             collection_name=_chroma_conf.collection.name,
             embedding_function=get_embed_model(),
-            persist_directory=get_abs_path(_chroma_conf.client.persist_directory),
+            persist_directory=persist_dir,
         )
 
         # 文本切分器

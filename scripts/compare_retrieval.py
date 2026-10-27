@@ -55,6 +55,15 @@ def main() -> int:
 
     print(f"知识库分块数：{retriever.size}   top_k={top_k}\n")
 
+    # 预热：第一次调用包含 embedding 客户端冷启动，先跑一次不计入统计，
+    # 否则两路检索的耗时会失真（先跑的那一路总是更慢）。
+    try:
+        retriever.search_vector("预热查询", 1)
+        retriever.search("预热查询", 1)
+        print("已预热完成，下面的耗时可以直接比较\n")
+    except Exception as exc:  # noqa: BLE001
+        print(f"预热失败（不影响后续）：{exc}\n")
+
     queries = [" ".join(sys.argv[1:])] if len(sys.argv) > 1 else DEFAULT_QUERIES
 
     for query in queries:
