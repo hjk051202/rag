@@ -72,9 +72,10 @@ flowchart LR
     Q[用户提问] --> R{检索层}
     R --> V[向量召回<br/>bge-m3 + Chroma]
     R --> B[BM25 关键词召回<br/>jieba 分词]
-    V --> F[RRF 融合]
+    V --> F[RRF 融合<br/>k=60]
     B --> F
-    F --> T{相关性阈值}
+    F --> RR[重排<br/>bge-reranker-v2-m3<br/>可选，默认关闭]
+    RR --> T{相关性阈值<br/>0.3}
     T -->|低于阈值| X[拒答：知识库无相关内容]
     T -->|通过| C[上下文组装<br/>编号 + 去重 + 字符预算]
     C --> L[LLM 生成<br/>带引用标注]
