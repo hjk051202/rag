@@ -4,7 +4,7 @@
 
 一个面向扫地机器人售前/售后场景的知识库问答应用：用户提问 → 检索知识库 → 大模型基于命中片段作答，并给出引用来源。
 
-在开源项目 [shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev](https://github.com/shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev) 的 `zhisaotong_agent` 子项目基础上裁剪、重写而来。
+在开源项目 [shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev](https://github.com/shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev) 的基础上优化而来。
 
 ---
 
@@ -52,9 +52,8 @@
 
 ### 其他调整
 
-- 模型层从写死 DashScope 改为 OpenAI 兼容协议：换服务商只改 `.env`，不动代码。
 - 去掉 Agent、工具、埋点、用户使用报告（`records.csv`）等与 RAG 无关的模块。
-- 精简依赖：去掉 `langchain`、`langchain-community`、`langchain-ollama`、`dashscope`。
+- 精简依赖：去掉 `langchain`、`langchain-community`、`langchain-ollama`、`dashscope`等不了解的板块
 
 ---
 
@@ -127,28 +126,10 @@ zhisaotong-rag/
     └── utils/                  # 配置加载、日志、文件读取（沿用上游）
 ```
 
----
-
-## 六、怎么产出可写进简历的数字
-
-1. 从 `data/` 里挑 **20-30 个**真实问题（带型号、带数字的最佳），记录标准答案和应命中的文件。
-2. 对每个问题跑 `compare_retrieval.py`，记录：
-   - 纯向量是否命中正确文件
-   - 混合检索是否命中
-   - 首次命中的排名（MRR 的简化版）
-3. 统计两个数字即可：
-
-   | 指标 | 纯向量 | 混合检索 |
-   |---|---|---|
-   | 命中率（top-5 内出现正确文件） | __% | __% |
-   | 平均排名 | __ | __ |
-   | 平均耗时 | __ ms | __ ms |
-
-> 数字必须是自己跑出来的。面试官问"这两个数怎么来的"，你要能当场复现这个过程。
 
 ---
 
-## 七、已知限制
+## 六、已知限制
 
 - BM25 索引在内存里构建，知识库上万块后需要换成数据库侧全文索引。
 - 拒答阈值依赖向量相关性分数的量纲，换 embedding 模型后要重新标定。
@@ -157,7 +138,7 @@ zhisaotong-rag/
 
 ---
 
-## 八、实测结果
+## 七、实测结果
 
 测试条件：6 份文档、**326 个分块**（chunk_size=200，overlap=20）、bge-m3（1024 维）、top_k=5。
 
@@ -167,12 +148,12 @@ zhisaotong-rag/
 | 扫地机器人充不进电怎么办 | 132 ms | 91 ms | 0.25 |
 | 边刷不转了是什么原因 | 108 ms | 92 ms | 0.43 |
 
-两个值得说的点：
+值得一提的点：
 
 1. **召回重合度 0.25–0.67**，说明两路检索确实在互补，而不是重复劳动。
 2. **混合检索没有变慢**（89–92 ms vs 96–132 ms）。BM25 索引常驻内存，代价可以忽略；延迟主要由 embedding 接口决定。
 
-一个具体案例（问题：「边刷不转了是什么原因」）：
+具体案例（问题：「边刷不转了是什么原因」）：
 
 | 排名 | 纯向量 | 混合检索 |
 |---|---|---|
@@ -184,13 +165,10 @@ zhisaotong-rag/
 
 纯向量把「WiFi 断网」排进了前三，而真正写「边刷不旋转」的第 9 条**没进前五**；BM25 靠「边刷」「不转」的精确词匹配把它拉了回来。
 
-> 复现方式：`python scripts/compare_retrieval.py`
-
-> 界面上显示的「RRF 融合分」量级在 0.03 左右，这是 `1/(60+rank)` 的正常取值范围，不是百分比。判断"是否该拒答"用的是另一路向量相关性分数（阈值 0.3）。
 
 ---
 
-## 九、致谢
+## 八、致谢
 
-原始项目：[shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev](https://github.com/shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev)（黑马程序员 AI 大模型 RAG Agent 课程实践）。
-本项目复用其文档加载、文本切分、Chroma 封装、配置与日志工具，重写了检索融合、上下文组装、拒答逻辑与前端。
+原始项目：[shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev](https://github.com/shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev)
+本项目借鉴其文档加载、文本切分、Chroma 封装、配置与日志工具部分，优化了检索融合、上下文组装、拒答逻辑与前端。
