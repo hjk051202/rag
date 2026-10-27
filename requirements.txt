@@ -1,0 +1,22 @@
+# 模型与协议
+openai>=1.0.0
+
+# 配置与日志
+python-dotenv>=1.0.0
+PyYAML>=6.0
+
+# 向量库与文本切分（原项目同款版本）
+chromadb==1.4.1
+langchain-chroma>=0.1.0
+langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
+
+# 文档解析
+pypdf>=4.0.0
+
+# 前端
+streamlit>=1.28.0
+
+# 新增：混合检索
+jieba>=0.42.1
+rank-bm25>=0.2.2

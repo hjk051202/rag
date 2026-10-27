@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# 环境变量（含 API Key，绝对不能提交）
+.env
+
+# 向量库与索引状态
+chroma_db/
+chroma_db_dev/
+chroma_db_prod/
+md5.text
+
+# 日志
+logs/
+*.log
+
+# 编辑器
+.idea/
+.vscode/
+.DS_Store
