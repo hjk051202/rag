@@ -1,5 +1,7 @@
 # 智扫通 · 扫地机器人知识库问答（RAG）
 
+![demo](demo.png)
+
 一个面向扫地机器人售前/售后场景的知识库问答应用：用户提问 → 检索知识库 → 大模型基于命中片段作答，并给出引用来源。
 
 在开源项目 [shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev](https://github.com/shangxiang0907/HeiMa-AI-LLM-RAG-Agent-Dev) 的 `zhisaotong_agent` 子项目基础上裁剪、重写而来。
